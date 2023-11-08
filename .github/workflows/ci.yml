@@ -1,6 +1,7 @@
 name: CI
 on:
   - push
+    - branches: [development_DIS, master_DIS]
   - pull_request
 jobs:
   test:
