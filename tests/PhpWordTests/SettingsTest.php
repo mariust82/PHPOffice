@@ -2,10 +2,8 @@
 /**
  * This file is part of PHPWord - A pure PHP library for reading and writing
  * word processing documents.
- *
  * PHPWord is free software distributed under the terms of the GNU Lesser
  * General Public License version 3 as published by the Free Software Foundation.
- *
  * For the full copyright and license information, please read the LICENSE
  * file that was distributed with this source code. For the full list of
  * contributors, visit https://github.com/PHPOffice/PHPWord/contributors.
@@ -19,15 +17,15 @@ namespace PhpOffice\PhpWordTests;
 
 use PhpOffice\PhpWord\PhpWord;
 use PhpOffice\PhpWord\Settings;
+use PHPUnit\Framework\TestCase;
 
 /**
  * Test class for PhpOffice\PhpWord\Settings.
  *
  * @coversDefaultClass \PhpOffice\PhpWord\Settings
- *
  * @runTestsInSeparateProcesses
  */
-class SettingsTest extends \PHPUnit\Framework\TestCase
+class SettingsTest extends TestCase
 {
     private $compatibility;
 
@@ -42,6 +40,11 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
     private $outputEscapingEnabled;
 
     private $pdfRendererName;
+
+    /**
+     * @var array
+     */
+    private $pdfRendererOptions;
 
     private $pdfRendererPath;
 
@@ -58,6 +61,7 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
         $this->measurementUnit = Settings::getMeasurementUnit();
         $this->outputEscapingEnabled = Settings::isOutputEscapingEnabled();
         $this->pdfRendererName = Settings::getPdfRendererName();
+        $this->pdfRendererOptions = Settings::getPdfRendererOptions();
         $this->pdfRendererPath = Settings::getPdfRendererPath();
         $this->tempDir = Settings::getTempDir();
         $this->zipClass = Settings::getZipClass();
@@ -72,6 +76,7 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
         Settings::setMeasurementUnit($this->measurementUnit);
         Settings::setOutputEscapingEnabled($this->outputEscapingEnabled);
         Settings::setPdfRendererName($this->pdfRendererName);
+        Settings::setPdfRendererOptions($this->pdfRendererOptions);
         Settings::setPdfRendererPath($this->pdfRendererPath);
         Settings::setTempDir($this->tempDir);
         Settings::setZipClass($this->zipClass);
@@ -127,6 +132,23 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
     }
 
     /**
+     * Test set/get PDF renderer.
+     */
+    public function testSetGetPdfOptions(): void
+    {
+        $domPdfPath = realpath(PHPWORD_TESTS_BASE_DIR . '/../vendor/dompdf/dompdf');
+
+        self::assertEquals([], Settings::getPdfRendererOptions());
+
+        Settings::setPdfRendererOptions([
+            'font' => 'Arial',
+        ]);
+        self::assertEquals([
+            'font' => 'Arial',
+        ], Settings::getPdfRendererOptions());
+    }
+
+    /**
      * Test set/get measurement unit.
      */
     public function testSetGetMeasurementUnit(): void
@@ -151,7 +173,6 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
     /**
      * @covers ::getTempDir
      * @covers ::setTempDir
-     *
      * @depends testPhpTempDirIsUsedByDefault
      */
     public function testTempDirCanBeSet(): void
@@ -189,6 +210,12 @@ class SettingsTest extends \PHPUnit\Framework\TestCase
         self::assertEquals(12, Settings::getDefaultFontSize());
         self::assertFalse(Settings::setDefaultFontSize(null));
         self::assertEquals(12, Settings::getDefaultFontSize());
+        self::assertTrue(Settings::setDefaultFontSize(12.5));
+        self::assertEquals(12.5, Settings::getDefaultFontSize());
+        self::assertFalse(Settings::setDefaultFontSize(0.5));
+        self::assertEquals(12.5, Settings::getDefaultFontSize());
+        self::assertFalse(Settings::setDefaultFontSize(0));
+        self::assertEquals(12.5, Settings::getDefaultFontSize());
     }
 
     /**

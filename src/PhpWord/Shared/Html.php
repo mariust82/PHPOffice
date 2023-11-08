@@ -66,7 +66,7 @@ class Html
          * @todo parse $stylesheet for default styles.  Should result in an array based on id, class and element,
          * which could be applied when such an element occurs in the parseNode function.
          */
-        self::$options = $options;
+        static::$options = $options;
 
         // Preprocess: remove all line ends, decode HTML entity,
         // fix ampersand and angle brackets and add body tag for HTML fragments
@@ -87,10 +87,10 @@ class Html
         $dom = new DOMDocument();
         $dom->preserveWhiteSpace = $preserveWhiteSpace;
         $dom->loadXML($html);
-        self::$xpath = new DOMXPath($dom);
+        static::$xpath = new DOMXPath($dom);
         $node = $dom->getElementsByTagName('body');
 
-        self::parseNode($node->item(0), $element);
+        static::parseNode($node->item(0), $element);
         if (\PHP_VERSION_ID < 80000) {
             libxml_disable_entity_loader($orignalLibEntityLoader);
         }
@@ -160,8 +160,11 @@ class Html
             }
 
             $attributeClass = $attributes->getNamedItem('class');
-            if ($attributeClass && self::$css) {
-                $styles = self::parseStyleDeclarations(self::$css->getStyle('.' . $attributeClass->value), $styles);
+            if ($attributeClass) {
+                if (self::$css) {
+                    $styles = self::parseStyleDeclarations(self::$css->getStyle('.' . $attributeClass->value), $styles);
+                }
+                $styles['className'] = $attributeClass->value;
             }
 
             $attributeStyle = $attributes->getNamedItem('style');
@@ -268,7 +271,7 @@ class Html
      * Parse child nodes.
      *
      * @param DOMNode $node
-     * @param \PhpOffice\PhpWord\Element\AbstractContainer $element
+     * @param \PhpOffice\PhpWord\Element\AbstractContainer|Row|Table $element
      * @param array $styles
      * @param array $data
      */
@@ -411,6 +414,11 @@ class Html
 
         $newElement = $element->addTable($elementStyles);
 
+        // Add style name from CSS Class
+        if (isset($elementStyles['className'])) {
+            $newElement->getStyle()->setStyleName($elementStyles['className']);
+        }
+
         $attributes = $node->attributes;
         if ($attributes->getNamedItem('border') !== null) {
             $border = (int) $attributes->getNamedItem('border')->value;
@@ -436,7 +444,11 @@ class Html
             $rowStyles['tblHeader'] = true;
         }
 
-        return $element->addRow(null, $rowStyles);
+        // set cell height to control row heights
+        $height = $rowStyles['height'] ?? null;
+        unset($rowStyles['height']); // would not apply
+
+        return $element->addRow($height, $rowStyles);
     }
 
     /**
@@ -760,6 +772,14 @@ class Html
                     $styles['italic'] = $tValue;
 
                     break;
+                case 'font-variant':
+                    $tValue = false;
+                    if (preg_match('#small-caps#', $value)) {
+                        $tValue = true;
+                    }
+                    $styles['smallCaps'] = $tValue;
+
+                    break;
                 case 'margin':
                     $value = Converter::cssToTwip($value);
                     $styles['spaceBefore'] = $value;
@@ -799,6 +819,11 @@ class Html
                         $styles['width'] = $matches[1];
                         $styles['unit'] = \PhpOffice\PhpWord\SimpleType\TblWidth::AUTO;
                     }
+
+                    break;
+                case 'height':
+                    $styles['height'] = Converter::cssToTwip($value);
+                    $styles['exactHeight'] = true;
 
                     break;
                 case 'border':
@@ -940,7 +965,10 @@ class Html
                 $tmpDir = Settings::getTempDir() . '/';
                 $match = [];
                 preg_match('/.+\.(\w+)$/', $src, $match);
-                $src = $tmpDir . uniqid() . '.' . $match[1];
+                $src = $tmpDir . uniqid();
+                if (isset($match[1])) {
+                    $src .= '.' . $match[1];
+                }
 
                 $ifp = fopen($src, 'wb');
 
