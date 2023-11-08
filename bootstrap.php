@@ -15,6 +15,7 @@
  * @license     http://www.gnu.org/licenses/lgpl.txt LGPL version 3
  */
 
+#-test v1
 $vendorDirPath = realpath(__DIR__ . '/vendor');
 if (file_exists($vendorDirPath . '/autoload.php')) {
     require $vendorDirPath . '/autoload.php';
