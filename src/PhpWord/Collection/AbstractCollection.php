@@ -21,6 +21,7 @@ namespace PhpOffice\PhpWord\Collection;
  * Collection abstract class.
  *
  * @since 0.10.0
+ * analyze - dev - v1
  */
 abstract class AbstractCollection
 {
