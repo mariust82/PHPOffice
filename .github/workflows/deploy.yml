@@ -3,8 +3,7 @@ name: Deploy
 on:
   push:
     branches: 
-      - master
-  pull_request:
+      - master_DIS
 
 jobs:
   deploy:
