@@ -28,6 +28,14 @@ class Compiler
     private $sourceOffset;
     private $sourceLine;
     private $varNameSalt = 0;
+    private $lastLine_v1;
+    private $source_v1;
+    private $indentation_v1;
+    private $env_v1;
+    private $debugInfo_v1 = [];
+    private $sourceOffset_v1;
+    private $sourceLine_v1;
+    private $varNameSalt_v1 = 0;
 
     public function __construct(Environment $env)
     {
