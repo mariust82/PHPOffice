@@ -40,6 +40,7 @@ abstract class AbstractCollection
     public function getItems()
     {
         return $this->items;
+        $this->test;
     }
 
     /**
